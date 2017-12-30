@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"net"
+	"time"
 
 	"github.com/rudhyd/hostlink-rw/commands"
 )
@@ -18,7 +19,7 @@ type Hostlink struct {
 	socket  net.Conn
 }
 
-//New Creates a new hostlink connection struct
+//NewConnection Creates a new hostlink connection struct
 func NewConnection(address string) *Hostlink {
 	return &Hostlink{Address: address}
 }
@@ -73,18 +74,20 @@ func (c *Hostlink) Write(command *commands.WriteCommand) (bool, error) {
 }
 
 func (c *Hostlink) send(cmd string) (string, error) {
-	_, err := c.socket.Write([]byte(cmd))
-
-	if err != nil {
-		return "", err
-	}
+	c.socket.SetDeadline(time.Now().Add(time.Second * 5))
 
 	reader := bufio.NewReader(c.socket)
-	resp, err := reader.ReadString('*')
+
+	_, err := c.socket.Write([]byte(cmd))
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := reader.ReadBytes('*')
 
 	if err != nil {
 		return "", err
 	}
 
-	return resp, nil
+	return string(resp), nil
 }

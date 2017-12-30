@@ -45,6 +45,10 @@ func (s *Shell) Execute() {
 		}
 
 		switch args[0] {
+		case "-h":
+			s.usage()
+		case "--help":
+			s.usage()
 		case "open":
 			s.open(args)
 		case "close":
